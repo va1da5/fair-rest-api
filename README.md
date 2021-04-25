@@ -1,5 +1,6 @@
 # Fair REST API
 
+Fair - platform for tracking and managing household chores.
 
 ## References
 
