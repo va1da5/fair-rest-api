@@ -1,8 +1,9 @@
-from django.db import models
 from uuid import uuid4
+
 from django.contrib.auth.models import User
-from datetime import datetime
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db import models
+
+from fair.household.models import Household
 
 
 class Task(models.Model):
@@ -14,27 +15,18 @@ class Task(models.Model):
     )
     time_to_complete = models.IntegerField(
         verbose_name="Takes Time",
-        help_text="How much time on average does it take to complete in seconds",
+        help_text="How much time on average does it take to complete the task in seconds",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(default=None, null=True, blank=True)
     last_completed_at = models.DateTimeField(default=None, null=True, blank=True)
+    household = models.ForeignKey(Household, on_delete=models.CASCADE)
+    handlers = models.ManyToManyField(User, help_text="Task handlers")
 
     def __repr__(self) -> str:
-        return f"<Task: {self.name}>"
+        return f"<Task: {self.name} - {self.household.name}>"
 
     def __str__(self) -> str:
         return self.__repr__()
-
-
-class TaskPool(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    tasks = models.ManyToManyField(Task)
-
-    def __str__(self) -> str:
-        return f"<TaskPool: {self.user.username}>"
-
-    def __repr__(self) -> str:
-        return super().__str__()

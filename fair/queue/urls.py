@@ -1,4 +1,5 @@
-from django.urls import path, include
+from django.urls import include, path
+
 from . import views
 
 queue_patterns = [
@@ -24,7 +25,6 @@ queue_patterns = [
         views.QueueItemRatingApi.as_view(),
         name="item.rank",
     ),
-    path("eligible", views.EligibleTasksApi.as_view(), name="eligible"),
 ]
 
 urlpatterns = [

@@ -1,0 +1,10 @@
+# Testing
+# ------------------------------------------------------------------------------
+pytest==6.2.3                  # https://github.com/pytest-dev/pytest
+pytest-sugar==0.9.4            # https://github.com/Frozenball/pytest-sugar
+coverage==5.5                  # https://github.com/nedbat/coveragepy
+
+# Django
+# ------------------------------------------------------------------------------
+pytest-django==4.2.0           # https://github.com/pytest-dev/pytest-django
+django-coverage-plugin==1.8.0  # https://github.com/nedbat/django_coverage_plugin

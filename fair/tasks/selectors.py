@@ -1,11 +1,15 @@
 from typing import List
-from .models import Task
+
 from django.contrib.auth.models import User
 
+from fair.household.models import Household
 
-def all_task_list() -> List[Task]:
-    return Task.objects.all()
+from .models import Task
 
 
-def personal_task_list(*, user: User = None) -> List[Task]:
-    return user.taskpool.tasks
+def household_task_list(*, household: Household) -> List[Task]:
+    return Task.objects.filter(household=household).all()
+
+
+def personal_task_list(*, user: User, household: Household) -> List[Task]:
+    return user.task_set.filter(household=household).all()

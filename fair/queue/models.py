@@ -1,9 +1,36 @@
-from django.db import models
+from functools import wraps
+from typing import Callable
 from uuid import uuid4
+
 from django.contrib.auth.models import User
-from datetime import datetime
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
+from django.utils import timezone
+
 from fair.tasks.models import Task
+
+
+def validate_owner(func) -> Callable:
+    @wraps(func)
+    def validate(self, user: User, *args, **kwargs):
+        if not user == self.user:
+            return self
+        return func(self, *args, **kwargs)
+
+    return validate
+
+
+def from_state(allowed_states):
+    def inner(func):
+        @wraps(func)
+        def wrapper(self):
+            if self.state not in allowed_states:
+                return self
+            return func(self)
+
+        return wrapper
+
+    return inner
 
 
 class QueueItem(models.Model):
@@ -64,33 +91,40 @@ class QueueItem(models.Model):
         blank=True,
     )
 
+    @from_state(["POSTPONED"])
     def reschedule_task(self):
-        if self.state in ["POSTPONED"]:
-            self.state = "SCHEDULED"
+        self.state = "SCHEDULED"
         return self
 
+    @validate_owner
+    @from_state(["SCHEDULED", "POSTPONED"])
     def activate_task(self):
-        if self.state in ["SCHEDULED", "POSTPONED"]:
-            self.state = "ACTIVE"
-            self.activated_at = datetime.now()
+        self.state = "ACTIVE"
+        self.activated_at = timezone.now()
         return self
 
+    @validate_owner
+    @from_state(["SCHEDULED", "POSTPONED"])
     def postpone_task(self):
-        if self.state in ["SCHEDULED", "POSTPONED"]:
-            self.state = "POSTPONED"
-            self.postpone_counter += 1
-            self.postponed_at = datetime.now()
-            self.activated_at = None
+        self.state = "POSTPONED"
+        self.postpone_counter += 1
+        self.postponed_at = timezone.now()
+        self.activated_at = None
         return self
 
+    @validate_owner
+    @from_state(["ACTIVE"])
     def complete_task(self):
-        if self.state in ["ACTIVE"]:
-            self.state = "COMPLETED"
-            self.completed_at = datetime.now()
+        self.state = "COMPLETED"
+        self.completed_at = timezone.now()
+        self.task.last_completed_at = self.completed_at
+        self.task.save()
         return self
 
+    @validate_owner
+    @from_state(["COMPLETED"])
     def set_stars(self, value: int):
-        if self.state in ["COMPLETED"]:
+        if not self.stars:
             self.stars = value
         return self
 

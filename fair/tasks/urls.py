@@ -1,10 +1,10 @@
-from django.urls import path, include
-from . import views
+from django.urls import include, path
 
+from . import views
 
 task_patterns = [
     path("", views.TaskListApi.as_view(), name="all"),
-    path("my", views.PersonalTaskPoolApi.as_view(), name="personal"),
+    path("my", views.PersonalTasksApi.as_view(), name="personal"),
 ]
 
 

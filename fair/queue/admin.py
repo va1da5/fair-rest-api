@@ -34,6 +34,7 @@ class QueueItemAdmin(admin.ModelAdmin):
         "postponed_at",
         "completed_at",
     )
+    list_filter = ("user", "state")
 
 
 admin.site.register(QueueItem, QueueItemAdmin)

@@ -1,0 +1,42 @@
+version: "3"
+
+services:
+  api: &app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
+    environment:
+      CELERY_BROKER_URL: redis://redis/0
+      CELERY_RESULT_BACKEND: redis://redis/1
+    ports:
+      - 8000:8000
+    volumes:
+      - .:/app
+    entrypoint: sh
+    command:
+      - "-c"
+      - "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    restart: unless-stopped
+    depends_on: ["redis"]
+
+  worker:
+    <<: *app
+    command:
+      - "-c"
+      - "celery -A config.celery worker -l info"
+    restart: unless-stopped
+    ports: []
+
+  beats:
+    <<: *app
+    command:
+      - "-c"
+      - "celery -A config.celery beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler -s /tmp/celerybeat-schedule --pidfile='/tmp/celerybeat.pid'"
+    restart: unless-stopped
+    ports: []
+
+  redis:
+    image: redis:6.0-alpine
+    ports:
+      - 6379:6379

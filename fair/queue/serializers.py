@@ -1,7 +1,9 @@
-from .models import QueueItem
 from rest_framework import serializers
-from fair.tasks.serializers import TaskSerializer
+
 from fair.core.serializers import UserSerializer
+from fair.tasks.serializers import TaskSerializer
+
+from .models import QueueItem
 
 
 class QueueItemSerializer(serializers.ModelSerializer):
@@ -17,4 +19,24 @@ class QueueItemSerializer(serializers.ModelSerializer):
             "activated_at",
             "postponed_at",
             "completed_at",
+            "stars",
+        ]
+
+
+class QueueItemWithUserSerializer(serializers.ModelSerializer):
+    task = TaskSerializer()
+    user = UserSerializer()
+
+    class Meta:
+        model = QueueItem
+        fields = [
+            "uuid",
+            "state",
+            "task",
+            "user",
+            "scheduled_at",
+            "activated_at",
+            "postponed_at",
+            "completed_at",
+            "stars",
         ]
